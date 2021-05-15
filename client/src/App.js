@@ -2,6 +2,8 @@ import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import { ApolloProvider } from '@apollo/react-hooks';
 import ApolloClient from 'apollo-boost';
+import { StoreProvider } from "./utils/GlobalState";
+
 
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
@@ -27,6 +29,7 @@ function App() {
   return (
     <ApolloProvider client={client}>
       <Router>
+        <StoreProvider>
         <div>
           <Nav />
           <Switch>
@@ -38,6 +41,7 @@ function App() {
             <Route component={NoMatch} />
           </Switch>
         </div>
+        </StoreProvider>
       </Router>
     </ApolloProvider>
 
