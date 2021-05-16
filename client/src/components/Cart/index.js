@@ -5,10 +5,27 @@ import './style.css';
 import { useStoreContext } from '../../utils/GlobalState';
 import { TOGGLE_CART, ADD_MULTIPLE_TO_CART } from "../../utils/actions";
 import { idbPromise } from "../../utils/helpers";
+import { QUERY_CHECKOUT } from '../../utils/queries';
+import { loadStripe } from '@stripe/stripe-js';
+import { useLazyQuery } from '@apollo/react-hooks';
+
+const stripePromise = loadStripe('pk_test_TYooMQauvdEDq54NiTphI7jx');
+
 
 const Cart = () => {
     const [state, dispatch] = useStoreContext();
+    const [getCheckout, { data }] = useLazyQuery(QUERY_CHECKOUT);
+
+
+    useEffect(() => {
+      if (data) {
+        stripePromise.then((res) => {
+          res.redirectToCheckout({ sessionId: data.checkout.session })
+        })
+      }
+    }, [data]);
 // added for PWA
+
 useEffect(() => {
   async function getCart() {
     const cart = await idbPromise('cart', 'get');
@@ -23,7 +40,7 @@ useEffect(() => {
 // End of PWA
 
 
-
+// toggle cart
 function toggleCart() {
   dispatch({ type: TOGGLE_CART });
 }
@@ -36,12 +53,29 @@ if (!state.cartOpen) {
       </div>
     );
   }
+
+  // add up everything in cart
   function calculateTotal() {
     let sum = 0;
     state.cart.forEach(item => {
       sum += item.price * item.purchaseQuantity;
     });
     return sum.toFixed(2);
+  }
+
+  // submit everything in cart for payment process
+  function submitCheckout() {
+    const productIds = [];
+    
+  
+    state.cart.forEach((item) => {
+      for (let i = 0; i < item.purchaseQuantity; i++) {
+        productIds.push(item._id);
+      }
+    });
+    getCheckout({
+      variables: { products: productIds }
+    });
   }
 
   return (
@@ -57,9 +91,9 @@ if (!state.cartOpen) {
         <strong>Total: ${calculateTotal()}</strong>
         {
           Auth.loggedIn() ?
-            <button>
-              Checkout
-            </button>
+          <button onClick={submitCheckout}>
+          Checkout
+        </button>
             :
             <span>(log in to check out)</span>
         }
