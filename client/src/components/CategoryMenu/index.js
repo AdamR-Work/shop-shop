@@ -26,7 +26,23 @@ function CategoryMenu() {
   //     });
   //   }
   // }, [categoryData, dispatch]);
- useEffect(()=>{
+
+// useEffect WITH PWA 
+
+//  useEffect(()=>{
+//   if (categoryData) {
+//     dispatch({
+//       type: UPDATE_CATEGORIES,
+//       categories: categoryData.categories
+//     });
+//     categoryData.categories.forEach(category => {
+//       idbPromise('categories', 'put', category);
+//     });
+//   }})
+
+// useEffect WITH PWA AND ...Loading
+
+useEffect(() => {
   if (categoryData) {
     dispatch({
       type: UPDATE_CATEGORIES,
@@ -35,7 +51,15 @@ function CategoryMenu() {
     categoryData.categories.forEach(category => {
       idbPromise('categories', 'put', category);
     });
-  }})
+  } else if (!loading) {
+    idbPromise('categories', 'get').then(categories => {
+      dispatch({
+        type: UPDATE_CATEGORIES,
+        categories: categories
+      });
+    });
+  }
+}, [categoryData, loading, dispatch]);
 
   const handleClick = id => {
     console.log(id)
